@@ -1,0 +1,1703 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#050a0f">
+
+<title>LUX WEB PLAYER</title>
+
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/mpegts.js@1.8.2/dist/mpegts.min.js"></script>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+    background: #050a0f;
+    color: #eafff5;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+body {
+    padding: 10px;
+    overflow-x: hidden;
+}
+
+.app {
+    width: 100%;
+    max-width: 1100px;
+    margin: auto;
+}
+
+.header {
+    background: linear-gradient(135deg, #07151c, #031b13);
+    border: 1px solid #0b7a4b;
+    border-radius: 16px;
+    padding: 14px;
+    margin-bottom: 12px;
+    box-shadow: 0 0 20px rgba(0,255,140,.08);
+}
+
+.header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.logo-title {
+    color: #00ff88;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: 1px;
+}
+
+.subtitle {
+    color: #8fa9a0;
+    font-size: 12px;
+    margin-top: 3px;
+}
+
+.header-buttons {
+    display: flex;
+    gap: 7px;
+}
+
+.icon-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 11px;
+    border: 1px solid #145b43;
+    background: #071217;
+    color: #00ff88;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.icon-btn:active {
+    transform: scale(.96);
+}
+
+.panel {
+    background: #071016;
+    border: 1px solid #12372b;
+    border-radius: 15px;
+    padding: 12px;
+    margin-bottom: 12px;
+}
+
+.buttons {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+}
+
+button,
+.file-label {
+    border: 1px solid #126a47;
+    background: linear-gradient(135deg, #092219, #061410);
+    color: #dffff0;
+    border-radius: 10px;
+    padding: 11px 9px;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: center;
+    font-size: 13px;
+}
+
+button:hover,
+.file-label:hover {
+    border-color: #00ff88;
+}
+
+input[type="file"] {
+    display: none;
+}
+.search-box input {
+    flex: 1;
+    min-width: 0;
+    background: #03080b;
+    border: 1px solid #164535;
+    color: white;
+    border-radius: 10px;
+    padding: 11px;
+    outline: none;
+}
+.search-box input:focus {
+    border-color: #00ff88;
+}
+
+.search-box {
+    margin-bottom: 10px;
+}
+
+.filters {
+    display: flex;
+    gap: 7px;
+    overflow-x: auto;
+    padding-bottom: 5px;
+}
+
+.filter-btn {
+    white-space: nowrap;
+    padding: 8px 12px;
+    font-size: 12px;
+}
+
+.filter-btn.active {
+    background: #00a95c;
+    color: #001b0d;
+    border-color: #00ff88;
+}
+
+.player-panel {
+    padding: 8px;
+}
+
+.player-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.now-playing {
+    color: #00ff88;
+    font-size: 14px;
+    font-weight: bold;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#video {
+    width: 100%;
+    background: #000;
+    border-radius: 11px;
+    display: block;
+    max-height: 65vh;
+}
+
+.player-actions {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 7px;
+    margin-top: 8px;
+}
+
+.channels-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.channels-count {
+    color: #6e9385;
+    font-size: 12px;
+}
+
+.channel-list {
+    display: grid;
+    gap: 7px;
+}
+
+.channel {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px;
+    background: #050c10;
+    border: 1px solid #10372a;
+    border-radius: 11px;
+    cursor: pointer;
+}
+
+.channel:hover {
+    border-color: #00b968;
+}
+
+.channel.active {
+    border-color: #00ff88;
+    box-shadow: 0 0 12px rgba(0,255,136,.08);
+}
+
+.channel-logo {
+    width: 45px;
+    height: 45px;
+    object-fit: contain;
+    background: #020506;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+
+.channel-info {
+    min-width: 0;
+    flex: 1;
+}
+
+.channel-name {
+    font-size: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.channel-group {
+    color: #67877b;
+    font-size: 11px;
+    margin-top: 3px;
+}
+
+.favorite {
+    width: 35px;
+    height: 35px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #596861;
+    font-size: 21px;
+    flex-shrink: 0;
+}
+
+.favorite.active {
+    color: #ffd43b;
+}
+
+.empty {
+    text-align: center;
+    padding: 30px 10px;
+    color: #71877e;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(0,0,0,.78);
+    align-items: center;
+    justify-content: center;
+    padding: 15px;
+}
+
+.modal.show {
+    display: flex;
+}
+
+.modal-box {
+    width: 100%;
+    max-width: 430px;
+    background: #071116;
+    border: 1px solid #00a95c;
+    border-radius: 16px;
+    padding: 17px;
+    box-shadow: 0 0 30px rgba(0,255,136,.12);
+}
+
+.modal-title {
+    color: #00ff88;
+    font-size: 18px;
+    font-weight: 800;
+    margin-bottom: 12px;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    padding: 8px 0;
+    border-bottom: 1px solid #143128;
+    font-size: 13px;
+}
+
+.info-label {
+    color: #718b80;
+}
+
+.info-value {
+    text-align: right;
+    word-break: break-word;
+}
+
+.status {
+    margin-top: 8px;
+    font-size: 12px;
+    text-align: center;
+    min-height: 18px;
+}
+
+.success {
+    color: #00ff88;
+}
+
+.error {
+    color: #ff6868;
+}
+
+.loading {
+    color: #ffc857;
+}
+
+.small {
+    font-size: 11px;
+    color: #71877e;
+    line-height: 1.5;
+    margin-top: 10px;
+}
+
+.footer {
+    text-align: center;
+    color: #49645a;
+    font-size: 10px;
+    padding: 10px;
+}
+
+@media (min-width: 700px) {
+    body {
+        padding: 25px;
+    }
+
+    .buttons {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .channel-list {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .player-actions {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .logo-title {
+        font-size: 25px;
+    }
+}
+
+@media (max-width: 420px) {
+    .app {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .panel,
+    .header {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .buttons button,
+    .buttons .file-label {
+        min-width: 0;
+        width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .header-row {
+        min-width: 0;
+    }
+
+    .header-buttons {
+        flex-shrink: 0;
+    }
+
+    .player-actions {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .player-actions button {
+        min-width: 0;
+        padding-left: 5px;
+        padding-right: 5px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+    <div class="header">
+        <div class="header-row">
+
+            <div>
+                <div class="logo-title">LUX WEB PLAYER</div>
+                <div class="subtitle">M3U • HLS • MPEG-TS</div>
+            </div>
+
+            <div class="header-buttons">
+                <button class="icon-btn" onclick="showIP()" title="Informazioni connessione">🌐</button>
+            </div>
+
+        </div>
+    </div>
+
+
+    <div class="panel">
+
+        <div class="buttons">
+
+            <label class="file-label">
+                📁 Carica M3U
+                <input type="file" id="fileInput" accept=".m3u,.m3u8,.txt">
+            </label>
+<button onclick="showFavorites()">
+                ⭐ Preferiti
+            </button>
+
+            <button onclick="loadDefaultPlaylist()">
+                🔄 Aggiorna lista
+            </button>
+
+            <button onclick="showAllChannels()">
+                📺 Tutti
+            </button>
+
+        </div>
+</div>
+
+
+    <div class="panel player-panel">
+
+        <div class="player-title">
+
+            <div class="now-playing" id="nowPlaying">
+                Nessun canale selezionato
+            </div>
+
+        </div>
+
+        <video
+            id="video"
+            controls
+            playsinline
+            preload="metadata">
+        </video>
+
+        <div class="player-actions">
+
+            <button onclick="toggleFullscreen()">
+                ⛶ Schermo
+            </button>
+<button onclick="stopPlayer()">
+                ⏹ Stop
+            </button>
+
+        </div>
+
+        <div id="playerStatus" class="status"></div>
+
+    </div>
+
+
+    <div class="panel">
+
+        <div class="channels-header">
+
+            <strong>📺 CANALI</strong>
+
+            <span id="channelsCount" class="channels-count">
+                0 canali
+            </span>
+
+        </div>
+
+        <div class="search-box">
+            <input
+                id="searchInput"
+                type="search"
+                placeholder="🔎 Cerca canale..."
+                oninput="renderChannels()"
+            >
+        </div>
+
+        <div id="filters" class="filters"></div>
+
+        <div id="channelList" class="channel-list">
+            <div class="empty">
+                Carica una playlist M3U per iniziare.
+            </div>
+        </div>
+
+    </div>
+
+    <div class="footer">
+        LUX WEB PLAYER
+    </div>
+
+</div>
+
+
+<!-- MODAL IP -->
+
+<div id="ipModal" class="modal">
+
+    <div class="modal-box">
+
+        <div class="modal-title">
+            🌐 Informazioni connessione
+        </div>
+
+        <div class="info-row">
+            <span class="info-label">IP pubblico</span>
+            <span class="info-value" id="ipValue">...</span>
+        </div>
+
+        <div class="info-row">
+            <span class="info-label">Paese</span>
+            <span class="info-value" id="countryValue">...</span>
+        </div>
+
+        <div class="info-row">
+            <span class="info-label">Città</span>
+            <span class="info-value" id="cityValue">...</span>
+        </div>
+
+        <div class="info-row">
+            <span class="info-label">ISP</span>
+            <span class="info-value" id="ispValue">...</span>
+        </div>
+
+        <div class="small">
+            Se utilizzi una VPN, normalmente verranno mostrati
+            l'indirizzo IP pubblico e la localizzazione associata
+            al server VPN.
+        </div>
+
+        <br>
+
+        <button onclick="closeModal('ipModal')">
+            CHIUDI
+        </button>
+
+    </div>
+
+</div>
+<script>
+
+/* =========================================================
+   CONFIGURAZIONE
+========================================================= */
+
+/*
+ * =========================================================
+ * PLAYLIST AUTOMATICA
+ * =========================================================
+ * INCOLLA QUI IL TUO LINK AL FILE .M3U oppure .TXT.
+ *
+ * Il link NON viene mostrato nell'interfaccia del player.
+ * Puoi usare anche un link condiviso Dropbox.
+ *
+ * Esempio:
+ * const PLAYLIST_URL = "https://www.dropbox.com/s/....?dl=1";
+ *
+ * Lascia "" se vuoi usare soltanto "Carica M3U".
+ */
+const PLAYLIST_URL = "https://www.dropbox.com/xxxxxx";
+
+
+/* =========================================================
+   VARIABILI
+========================================================= */
+
+let channels = [];
+let filteredChannels = [];
+let currentChannel = null;
+let currentPlayer = null;
+
+/* RICONNESSIONE AUTOMATICA */
+let reconnectTimer = null;
+let reconnectAttempts = 0;
+let playbackGeneration = 0;
+const MAX_RECONNECT_ATTEMPTS = 10;
+const RECONNECT_DELAY = 1000;
+
+let currentGroup = "TUTTI";
+let favoritesOnly = false;
+
+
+/* =========================================================
+   ELEMENTI
+========================================================= */
+
+const video = document.getElementById("video");
+const channelList = document.getElementById("channelList");
+const searchInput = document.getElementById("searchInput");
+const filters = document.getElementById("filters");
+const channelsCount = document.getElementById("channelsCount");
+const nowPlaying = document.getElementById("nowPlaying");
+const playerStatus = document.getElementById("playerStatus");
+
+
+/* =========================================================
+   LOCAL STORAGE
+========================================================= */
+
+function getFavorites() {
+
+    try {
+        return JSON.parse(
+            localStorage.getItem("luxFavorites") || "[]"
+        );
+    } catch {
+        return [];
+    }
+}
+
+
+function saveFavorites(list) {
+
+    localStorage.setItem(
+        "luxFavorites",
+        JSON.stringify(list)
+    );
+}
+
+
+function isFavorite(url) {
+
+    return getFavorites().includes(url);
+}
+
+
+function toggleFavorite(event, url) {
+
+    event.stopPropagation();
+
+    let favorites = getFavorites();
+
+    if (favorites.includes(url)) {
+
+        favorites =
+            favorites.filter(x => x !== url);
+
+    } else {
+
+        favorites.push(url);
+    }
+
+    saveFavorites(favorites);
+
+    renderChannels();
+}
+
+
+/* =========================================================
+   FILE M3U
+========================================================= */
+
+document
+    .getElementById("fileInput")
+    .addEventListener("change", async function(e) {
+
+        const file = e.target.files[0];
+
+        if (!file) return;
+
+        try {
+
+            const text = await file.text();
+
+            parseM3U(text);
+
+        } catch (error) {
+
+            showPlayerStatus(
+                "Errore lettura file M3U",
+                "error"
+            );
+        }
+
+    });
+
+
+/* =========================================================
+   PLAYLIST AUTOMATICA DA LINK
+========================================================= */
+
+/*
+ * Converte automaticamente i normali link Dropbox condivisi
+ * in un link che chiede il download del file.
+ */
+function normalizePlaylistUrl(url) {
+
+    let value = String(url || "").trim();
+
+    if (!value) return "";
+
+    if (value.includes("dropbox.com")) {
+
+        try {
+            const parsed = new URL(value);
+
+            parsed.searchParams.set("dl", "1");
+
+            /*
+             * Manteniamo il dominio Dropbox condiviso:
+             * è più compatibile con i nuovi link /scl/fi/.
+             */
+            return parsed.toString();
+
+        } catch (error) {
+            return value;
+        }
+    }
+
+    return value;
+}
+
+
+/*
+ * Carica la playlist preimpostata nell'HTML.
+ * Questa funzione viene richiamata automaticamente all'avvio
+ * e anche dal pulsante "Aggiorna lista".
+ */
+async function loadDefaultPlaylist() {
+
+    const url = normalizePlaylistUrl(PLAYLIST_URL);
+
+    if (!url) {
+
+        showPlayerStatus(
+            "Inserisci il link della playlist nella configurazione HTML.",
+            "loading"
+        );
+
+        return;
+    }
+
+    await loadM3U(url);
+}
+
+
+async function loadM3U(url) {
+
+    showPlayerStatus(
+        "Caricamento playlist...",
+        "loading"
+    );
+
+    try {
+
+        const response = await fetch(url, {
+            method: "GET",
+            cache: "no-store"
+        });
+
+        if (!response.ok) {
+
+            throw new Error(
+                "HTTP " + response.status
+            );
+        }
+
+        const text =
+            await response.text();
+
+        if (!text.trim()) {
+            throw new Error("Il file playlist è vuoto.");
+        }
+
+        parseM3U(text);
+
+    } catch (error) {
+
+        console.error("Errore caricamento playlist:", error);
+
+        showPlayerStatus(
+            "Impossibile caricare la playlist dal link. " +
+            "Controlla il link e che il server consenta richieste dal browser (CORS).",
+            "error"
+        );
+    }
+}
+
+
+/* =========================================================
+   PARSER M3U
+========================================================= */
+
+function parseM3U(text) {
+
+    channels = [];
+
+    const lines =
+        text.split(/\r?\n/);
+
+    let current = null;
+
+    for (let i = 0; i < lines.length; i++) {
+
+        const line =
+            lines[i].trim();
+
+        if (!line) continue;
+
+        if (line.startsWith("#EXTINF")) {
+
+            const comma =
+                line.indexOf(",");
+
+            let name =
+                comma >= 0
+                    ? line.substring(comma + 1).trim()
+                    : "Canale";
+
+            const logoMatch =
+                line.match(
+                    /tvg-logo=["']([^"']*)["']/i
+                );
+
+            const groupMatch =
+                line.match(
+                    /group-title=["']([^"']*)["']/i
+                );
+
+            current = {
+
+                name: name || "Canale",
+
+                logo:
+                    logoMatch
+                        ? logoMatch[1]
+                        : "",
+
+                group:
+                    groupMatch
+                        ? groupMatch[1]
+                        : "Senza gruppo",
+
+                url: ""
+
+            };
+
+        } else if (
+            !line.startsWith("#") &&
+            current
+        ) {
+
+            current.url = line;
+
+            if (current.url) {
+                channels.push(current);
+            }
+
+            current = null;
+        }
+    }
+
+    currentGroup = "TUTTI";
+    favoritesOnly = false;
+
+    buildFilters();
+    renderChannels();
+
+    showPlayerStatus(
+        `${channels.length} canali caricati`,
+        "success"
+    );
+}
+
+
+/* =========================================================
+   FILTRI
+========================================================= */
+
+function buildFilters() {
+
+    const groups = [
+        ...new Set(
+            channels
+                .map(c => c.group)
+                .filter(Boolean)
+        )
+    ].sort(
+        (a,b) =>
+            a.localeCompare(
+                b,
+                "it"
+            )
+    );
+
+    filters.innerHTML = "";
+
+    const allBtn =
+        document.createElement("button");
+
+    allBtn.className =
+        "filter-btn " +
+        (currentGroup === "TUTTI"
+            ? "active"
+            : "");
+
+    allBtn.textContent =
+        "TUTTI";
+
+    allBtn.onclick = () => {
+
+        currentGroup = "TUTTI";
+        favoritesOnly = false;
+
+        buildFilters();
+        renderChannels();
+    };
+
+    filters.appendChild(allBtn);
+
+
+    const favBtn =
+        document.createElement("button");
+
+    favBtn.className =
+        "filter-btn " +
+        (favoritesOnly
+            ? "active"
+            : "");
+
+    favBtn.textContent =
+        "⭐ PREFERITI";
+
+    favBtn.onclick = () => {
+
+        favoritesOnly = true;
+        currentGroup = "TUTTI";
+
+        buildFilters();
+        renderChannels();
+    };
+
+    filters.appendChild(favBtn);
+
+
+    groups.forEach(group => {
+
+        const btn =
+            document.createElement("button");
+
+        btn.className =
+            "filter-btn " +
+            (
+                currentGroup === group &&
+                !favoritesOnly
+                    ? "active"
+                    : ""
+            );
+
+        btn.textContent =
+            group;
+
+        btn.onclick = () => {
+
+            currentGroup = group;
+            favoritesOnly = false;
+
+            buildFilters();
+            renderChannels();
+        };
+
+        filters.appendChild(btn);
+
+    });
+}
+
+
+/* =========================================================
+   RENDER CANALI
+========================================================= */
+
+function renderChannels() {
+
+    const search =
+        searchInput.value
+            .trim()
+            .toLowerCase();
+
+    filteredChannels =
+        channels.filter(channel => {
+
+            const matchesSearch =
+                !search ||
+                channel.name
+                    .toLowerCase()
+                    .includes(search);
+
+            const matchesGroup =
+                currentGroup === "TUTTI" ||
+                channel.group === currentGroup;
+
+            const matchesFavorite =
+                !favoritesOnly ||
+                isFavorite(channel.url);
+
+            return (
+                matchesSearch &&
+                matchesGroup &&
+                matchesFavorite
+            );
+        });
+
+
+    channelsCount.textContent =
+        filteredChannels.length +
+        " canali";
+
+
+    channelList.innerHTML = "";
+
+
+    if (!filteredChannels.length) {
+
+        channelList.innerHTML = `
+            <div class="empty">
+                Nessun canale trovato.
+            </div>
+        `;
+
+        return;
+    }
+
+
+    filteredChannels.forEach(channel => {
+
+        const item =
+            document.createElement("div");
+
+        item.className =
+            "channel " +
+            (
+                currentChannel &&
+                currentChannel.url === channel.url
+                    ? "active"
+                    : ""
+            );
+
+
+        item.onclick = () =>
+            playChannel(channel);
+
+
+        const logo =
+            document.createElement("img");
+
+        logo.className =
+            "channel-logo";
+
+        logo.src =
+            channel.logo ||
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Crect width='100%25' height='100%25' fill='%23050a0f'/%3E%3Ctext x='50%25' y='55%25' text-anchor='middle' fill='%2300ff88' font-size='28'%3EL%3C/text%3E%3C/svg%3E";
+
+        logo.onerror = function() {
+
+            this.style.display = "none";
+        };
+
+
+        const info =
+            document.createElement("div");
+
+        info.className =
+            "channel-info";
+
+        info.innerHTML = `
+            <div class="channel-name">
+                ${escapeHTML(channel.name)}
+            </div>
+            <div class="channel-group">
+                ${escapeHTML(channel.group || "Senza gruppo")}
+            </div>
+        `;
+
+
+        const fav =
+            document.createElement("button");
+
+        fav.className =
+            "favorite " +
+            (
+                isFavorite(channel.url)
+                    ? "active"
+                    : ""
+            );
+
+        fav.textContent =
+            isFavorite(channel.url)
+                ? "★"
+                : "☆";
+
+        fav.title =
+            "Preferito";
+
+        fav.onclick =
+            event =>
+                toggleFavorite(
+                    event,
+                    channel.url
+                );
+
+
+        item.appendChild(logo);
+        item.appendChild(info);
+        item.appendChild(fav);
+
+        channelList.appendChild(item);
+
+    });
+}
+
+
+/* =========================================================
+   RIPRODUZIONE CANALE
+========================================================= */
+
+function cancelReconnect() {
+    if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+        reconnectTimer = null;
+    }
+}
+
+function scheduleReconnect(reason = "Connessione persa") {
+    if (!currentChannel || !currentChannel.url) return;
+    if (reconnectTimer) return;
+
+    if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+        showPlayerStatus(
+            "Stream non disponibile dopo " + MAX_RECONNECT_ATTEMPTS + " tentativi.",
+            "error"
+        );
+        return;
+    }
+
+    reconnectAttempts++;
+    const attempt = reconnectAttempts;
+    const generation = playbackGeneration;
+
+    showPlayerStatus(
+        reason + " — riconnessione " + attempt + "/" + MAX_RECONNECT_ATTEMPTS + " tra 1 secondo...",
+        "loading"
+    );
+
+    reconnectTimer = setTimeout(() => {
+        reconnectTimer = null;
+
+        if (!currentChannel || generation !== playbackGeneration) return;
+
+        startPlayback(currentChannel, generation);
+    }, RECONNECT_DELAY);
+}
+
+function startPlayback(channel, generation) {
+    if (!channel || !channel.url || generation !== playbackGeneration) return;
+
+    destroyPlayer();
+
+    const url = channel.url.trim();
+    const lower = url.toLowerCase();
+
+    showPlayerStatus(
+        reconnectAttempts > 0
+            ? "Riconnessione al canale..."
+            : "Connessione al canale...",
+        "loading"
+    );
+
+    /* HLS */
+    if (
+        lower.includes(".m3u8") ||
+        lower.includes("application/vnd.apple.mpegurl")
+    ) {
+        if (Hls.isSupported()) {
+            currentPlayer = new Hls({
+                enableWorker: true
+            });
+
+            currentPlayer.loadSource(url);
+            currentPlayer.attachMedia(video);
+
+            currentPlayer.on(
+                Hls.Events.MANIFEST_PARSED,
+                function() {
+                    if (generation !== playbackGeneration) return;
+
+                    video.play()
+                        .then(() => {
+                            reconnectAttempts = 0;
+                            showPlayerStatus(
+                                "Canale in riproduzione",
+                                "success"
+                            );
+                        })
+                        .catch(() => {
+                            reconnectAttempts = 0;
+                            showPlayerStatus(
+                                "Canale pronto — premi Play.",
+                                "loading"
+                            );
+                        });
+                }
+            );
+
+            currentPlayer.on(
+                Hls.Events.ERROR,
+                function(event, data) {
+                    console.error("HLS error", data);
+
+                    if (generation !== playbackGeneration) return;
+
+                    if (data && data.fatal) {
+                        scheduleReconnect("Connessione HLS persa");
+                    }
+                }
+            );
+
+        } else if (
+            video.canPlayType(
+                "application/vnd.apple.mpegurl"
+            )
+        ) {
+            video.src = url;
+
+            video.play()
+                .then(() => {
+                    reconnectAttempts = 0;
+                    showPlayerStatus(
+                        "Canale in riproduzione",
+                        "success"
+                    );
+                })
+                .catch(() => {
+                    showPlayerStatus(
+                        "Canale pronto — premi Play.",
+                        "loading"
+                    );
+                });
+
+            video.onerror = () => {
+                if (generation === playbackGeneration) {
+                    scheduleReconnect("Connessione persa");
+                }
+            };
+
+        } else {
+            showPlayerStatus(
+                "HLS non supportato dal browser.",
+                "error"
+            );
+        }
+
+    /* MPEG-TS */
+    } else {
+        if (
+            typeof mpegts !== "undefined" &&
+            mpegts.isSupported()
+        ) {
+            currentPlayer = mpegts.createPlayer({
+                type: "mpegts",
+                isLive: true,
+                url: url
+            });
+
+            currentPlayer.attachMediaElement(video);
+
+            if (mpegts.Events && mpegts.Events.ERROR) {
+                currentPlayer.on(
+                    mpegts.Events.ERROR,
+                    function(type, detail, info) {
+                        console.error(
+                            "MPEG-TS error",
+                            type,
+                            detail,
+                            info
+                        );
+
+                        if (generation === playbackGeneration) {
+                            scheduleReconnect("Connessione MPEG-TS persa");
+                        }
+                    }
+                );
+            }
+
+            currentPlayer.load();
+
+            currentPlayer.play()
+                .then(() => {
+                    reconnectAttempts = 0;
+                    showPlayerStatus(
+                        "Canale in riproduzione",
+                        "success"
+                    );
+                })
+                .catch(error => {
+                    console.error(error);
+                    showPlayerStatus(
+                        "Il browser non ha avviato automaticamente il video. Premi Play.",
+                        "loading"
+                    );
+                });
+
+            video.onerror = () => {
+                if (generation === playbackGeneration) {
+                    scheduleReconnect("Connessione persa");
+                }
+            };
+
+            video.onended = () => {
+                if (generation === playbackGeneration) {
+                    scheduleReconnect("Stream terminato");
+                }
+            };
+
+        } else {
+            showPlayerStatus(
+                "MPEG-TS non supportato dal browser.",
+                "error"
+            );
+        }
+    }
+}
+
+function playChannel(channel) {
+    if (!channel || !channel.url) return;
+
+    cancelReconnect();
+    reconnectAttempts = 0;
+    playbackGeneration++;
+
+    currentChannel = channel;
+    nowPlaying.textContent = channel.name;
+
+    startPlayback(channel, playbackGeneration);
+    renderChannels();
+}
+
+/* =========================================================
+   DESTROY PLAYER
+========================================================= */
+
+function destroyPlayer() {
+
+    if (!currentPlayer) {
+
+        video.pause();
+        video.removeAttribute("src");
+        video.load();
+
+        return;
+    }
+
+
+    try {
+
+        if (
+            typeof Hls !== "undefined" &&
+            currentPlayer instanceof Hls
+        ) {
+
+            currentPlayer.destroy();
+
+        } else if (
+            typeof currentPlayer.destroy === "function"
+        ) {
+
+            currentPlayer.destroy();
+        }
+
+    } catch (error) {
+
+        console.error(error);
+    }
+
+
+    currentPlayer = null;
+
+    video.pause();
+    video.removeAttribute("src");
+    video.load();
+}
+
+
+/* =========================================================
+   STOP
+========================================================= */
+
+function stopPlayer() {
+
+    cancelReconnect();
+    playbackGeneration++;
+    reconnectAttempts = 0;
+    destroyPlayer();
+
+    currentChannel = null;
+
+    nowPlaying.textContent =
+        "Nessun canale selezionato";
+
+    renderChannels();
+
+    showPlayerStatus(
+        "",
+        ""
+    );
+}
+
+
+/* =========================================================
+   FULLSCREEN
+========================================================= */
+
+function toggleFullscreen() {
+
+    if (!document.fullscreenElement) {
+
+        if (
+            video.requestFullscreen
+        ) {
+
+            video.requestFullscreen();
+
+        } else if (
+            video.webkitEnterFullscreen
+        ) {
+
+            video.webkitEnterFullscreen();
+        }
+
+    } else {
+
+        document.exitFullscreen();
+    }
+}
+
+
+/* =========================================================
+   IP / GEOLOCALIZZAZIONE
+========================================================= */
+
+async function showIP() {
+
+    document
+        .getElementById("ipModal")
+        .classList.add("show");
+
+
+    document.getElementById(
+        "ipValue"
+    ).textContent = "...";
+
+    document.getElementById(
+        "countryValue"
+    ).textContent = "...";
+
+    document.getElementById(
+        "cityValue"
+    ).textContent = "...";
+
+    document.getElementById(
+        "ispValue"
+    ).textContent = "...";
+
+
+    try {
+
+        const response =
+            await fetch(
+                "https://ipapi.co/json/"
+            );
+
+
+        if (!response.ok) {
+            throw new Error(
+                "Servizio IP non disponibile"
+            );
+        }
+
+
+        const data =
+            await response.json();
+
+
+        document.getElementById(
+            "ipValue"
+        ).textContent =
+            data.ip || "N/D";
+
+
+        document.getElementById(
+            "countryValue"
+        ).textContent =
+            data.country_name || "N/D";
+
+
+        document.getElementById(
+            "cityValue"
+        ).textContent =
+            data.city || "N/D";
+
+
+        document.getElementById(
+            "ispValue"
+        ).textContent =
+            data.org || "N/D";
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        document.getElementById(
+            "ipValue"
+        ).textContent =
+            "Non disponibile";
+
+        document.getElementById(
+            "countryValue"
+        ).textContent =
+            "Non disponibile";
+
+        document.getElementById(
+            "cityValue"
+        ).textContent =
+            "Non disponibile";
+
+        document.getElementById(
+            "ispValue"
+        ).textContent =
+            "Non disponibile";
+    }
+}
+
+
+/* =========================================================
+   MODAL
+========================================================= */
+
+function closeModal(id) {
+
+    document
+        .getElementById(id)
+        .classList.remove("show");
+}
+
+
+document.addEventListener(
+    "click",
+    function(event) {
+
+        if (
+            event.target.classList.contains(
+                "modal"
+            )
+        ) {
+
+            event.target.classList.remove(
+                "show"
+            );
+        }
+    }
+);
+
+
+/* =========================================================
+   FAVORITI / TUTTI
+========================================================= */
+
+function showFavorites() {
+
+    favoritesOnly = true;
+
+    currentGroup = "TUTTI";
+
+    buildFilters();
+    renderChannels();
+}
+
+
+function showAllChannels() {
+
+    favoritesOnly = false;
+
+    currentGroup = "TUTTI";
+
+    buildFilters();
+    renderChannels();
+}
+
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+function showPlayerStatus(
+    message,
+    type
+) {
+
+    playerStatus.textContent =
+        message || "";
+
+    playerStatus.className =
+        "status " +
+        (type || "");
+}
+
+
+/* =========================================================
+   ESCAPE HTML
+========================================================= */
+
+function escapeHTML(value) {
+
+    return String(value || "")
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+        .replace(
+            /</g,
+            "&lt;"
+        )
+        .replace(
+            />/g,
+            "&gt;"
+        )
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+}
+
+
+/* =========================================================
+   AVVIO
+========================================================= */
+
+buildFilters();
+renderChannels();
+
+/*
+ * Controlliamo se la pagina è stata
+ * aperta tramite un link condiviso.
+ */
+</script>
+
+</body>
+</html>
